@@ -10,6 +10,93 @@
 
 module.exports = (robot) ->
 
+  robot.respond /have a drink/i, (msg) ->
+    drinksHad = robot.brain.get('totalDrinks') * 1 or 0
+
+    if drinksHad > 5
+      msg.reply "Maybe I shouldn't..."
+    else
+      msg.reply "Bottom's up!"
+
+      robot.brain.set 'totalDrinks', drinksHad+1
+
+    robot.respond /sleep it off/i, (msg) ->
+      robot.brain.set 'totalDrinks', 0
+      robot.respond 'Zzzzzz'
+
+  # robot.respond /reader me (.*)/i, (msg) ->
+  #   searchQuery = msg.match[1]
+  #
+  #   articleSearch msg, searchQuery
+  #
+  # articleSearch = (msg, searchQuery) ->
+  #   data = ""
+  #   msg.http("https://read.codaisseur.com/search.json")
+  #     .query
+  #       search: encodeURIComponent(searchQuery)
+  #       user_email: process.env.HUBOT_READER_EMAIL
+  #       user_token: process.env.HUBOT_READER_TOKEN
+  #     .get( (err, req)->
+  #       req.addListener "response", (res)->
+  #         output = res
+  #
+  #         output.on 'data', (d)->
+  #           data += d.toString('utf-8')
+  #
+  #         output.on 'end', ()->
+  #           parsedData = JSON.parse(data)
+  #
+  #           if parsedData.error
+  #             msg.send "Error searching Reader: #{parsedData.error}"
+  #             return
+  #
+  #           if parsedData.length > 0
+  #             i = 0
+  #             qs = for article in parsedData[0..3]
+  #               "#{++i}. <https://read.codaisseur.com/topics/#{article.topics[0].slug}/articles/#{article.slug}|#{article.title}>"
+  #             if parsedData.total-3 > 0
+  #               qs.push "#{parsedData.total-3} more..."
+  #             msg.send qs.join("\n")
+  #           else
+  #             msg.reply "No articles found matching that search."
+  #     )()
+
+  robot.respond /npm me (.*)/i, (msg) ->
+    search = escape(msg.match[1])
+    msg.http('https://www.npmjs.com/search?q=')
+      .query(q: search)
+      .get( (err, req, body) ->
+        req.addListener "response", (res)->
+          output = res
+
+          output.on 'q', (d)->
+            data += d.toString('utf-8')
+
+          output.on 'end', ()->
+            parsedData = JSON.parse(body).data
+
+        if parsedData.length > 0
+          result = msg.random(data)
+          msg.send result.link
+        else
+          msg.send "NO!"
+          )
+  # robot.respond /have a soda/i, (msg) ->
+  #   # Get number of sodas had (coerced to a number).
+  #   sodasHad = robot.brain.get('totalSodas') * 1 or 0
+  #
+  #   if sodasHad > 4
+  #     msg.reply "I'm too fizzy.."
+  #
+  #   else
+  #     msg.reply 'Sure!'
+  #
+  #     robot.brain.set 'totalSodas', sodasHad+1
+  #
+  # robot.respond /sleep it off/i, (msg) ->
+  #   robot.brain.set 'totalSodas', 0
+  #   robot.respond 'zzzzz'
+
   # robot.hear /badger/i, (msg) ->
   #   msg.send "Badgers? BADGERS? WE DON'T NEED NO STINKIN BADGERS"
   #
